@@ -2,7 +2,11 @@ import { Container } from "./Container";
 import { Injectable } from "./injectable";
 let container = new Container();
 @Injectable()
-class Car {}
+class Car {
+  fn() {
+    console.log("car fn");
+  }
+}
 @Injectable()
 class House {}
 @Injectable()
@@ -21,5 +25,7 @@ container.addProvider({
 });
 let girlFriend = container.inject(GirlFriend); // 用了装饰器 才能让design:paramtypes生效
 console.log(girlFriend);
-// console.log(Reflect.getMetadata("design:paramtypes", GirlFriend));
+
+ // 用了装饰器 才能让design:paramtypes生效
+console.log(Reflect.getMetadata("design:paramtypes", GirlFriend)[0]);
 // console.log(container);
