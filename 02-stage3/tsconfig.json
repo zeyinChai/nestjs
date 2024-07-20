@@ -1,0 +1,8 @@
+{
+    "compilerOptions": {
+        "experimentalDecorators": true, // 支持stage 0 1 2写法
+        "emitDecoratorMetadata": true,
+        "moduleResolution": "Node",
+        "target": "ES2015"
+    }
+}
