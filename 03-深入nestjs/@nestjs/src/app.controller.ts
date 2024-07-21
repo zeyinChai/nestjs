@@ -1,8 +1,16 @@
 import { Controller, Get } from "../common";
-@Controller('/')
-export class AppController{
-    @Get()
-    index(){
-        return '123'
-    }
+import { Inject } from "../common/inject.decorator";
+import { LoggerService, UseFactory, UseValueService } from "./logger.service";
+
+@Controller("/")
+export class AppController {
+  constructor(
+    private loggerService: LoggerService,
+    // private UseValueService: UseValueService
+  ) {}
+  @Get()
+  index() {
+    this.loggerService.log("index1");
+    return "123";
+  }
 }
