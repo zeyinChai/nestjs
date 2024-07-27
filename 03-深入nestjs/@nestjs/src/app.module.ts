@@ -1,17 +1,10 @@
 import { Module } from "../common";
 import { AppController } from "./app.controller";
-import { LoggerService, UseValueService,UseFactory } from "./logger.service";
-
+import { CommonModule } from "./commonModule/common.module";
+import { LoggerModule } from "./loggerModule/logger.module";
+import { OtherModule } from "./otherModule/other.module";
 @Module({
   controllers: [AppController],
-  providers: [
-    UseValueService,
-    LoggerService,
-    { provide: "StringToken", useValue: new UseValueService() },
-    {
-      provide: "FactoryToken",
-      useFactory: () => new UseFactory(),
-    },
-  ],
+  imports: [LoggerModule, CommonModule, OtherModule],
 })
 export class AppModule {}

@@ -1,4 +1,4 @@
-import { Injectable } from "../common";
+import { Injectable } from "../../common";
 
 @Injectable()
 export class UseValueService {
@@ -20,7 +20,7 @@ export class LoggerService {
   log(message) {
     console.log("LoggerService", message);
     // console.log(this.UseValueService);
-    
+
     this.UseValueService.log("LoggerService 依赖 UseValueService");
   }
 }
