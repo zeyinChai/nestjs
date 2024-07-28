@@ -1,10 +1,11 @@
 import { Module } from "../common";
 import { AppController } from "./app.controller";
-import { CommonModule } from "./commonModule/common.module";
+import { AppService } from "./app.service";
+import { DynamicConfigModule } from "./dynamicModule/dynamicConfig.module";
 import { LoggerModule } from "./loggerModule/logger.module";
-import { OtherModule } from "./otherModule/other.module";
 @Module({
   controllers: [AppController],
-  imports: [LoggerModule, CommonModule, OtherModule],
+  imports: [LoggerModule, DynamicConfigModule.forRoot(456)],
+  providers: [AppService],
 })
 export class AppModule {}

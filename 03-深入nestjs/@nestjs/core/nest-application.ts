@@ -6,7 +6,7 @@ import express, {
   NextFunction,
 } from "express";
 import path from "path";
-import { DESIGN_PARAMTYPES, INJECTED_TOKENS } from "../common";
+import { defineModule, DESIGN_PARAMTYPES, INJECTED_TOKENS } from "../common";
 
 export class NestApplication {
   // 在内部私有化一个express实例
@@ -21,14 +21,38 @@ export class NestApplication {
       req.user = { name: "admin", role: "admin" };
       next();
     });
-    this.initProviders(); // 注入providers
   }
-  initProviders() {
+  async initProviders() {
     // 拿到appModule身上的imports
     const imports = Reflect.getMetadata("imports", this.module) ?? [];
     // 遍历所有导入的模块
     for (const importModule of imports) {
-      this.registerProvidersFromModule(importModule, this.module);
+      let importedModule = importModule;
+      // 如果引入的module是一个promise说明是个异步模块
+      if (importModule instanceof Promise) {
+        importedModule = await importedModule;
+      }
+      // 如果导入的模块有module属性说明是一个动态模块
+      if ("module" in importedModule) {
+        const { module, providers, exports, controllers } = importedModule;
+        const oldProviders = Reflect.getMetadata("providers", module);
+        const oldControllers = Reflect.getMetadata("controllers", module);
+        const oldExports = Reflect.getMetadata("exports", module);
+        const newProviders = [...(oldProviders ?? []), ...(providers ?? [])];
+        const newExports = [...(oldExports ?? []), ...(exports ?? [])];
+        const newControllers = [
+          ...(oldControllers ?? []),
+          ...(controllers ?? []),
+        ];
+        defineModule(module, newProviders);
+        defineModule(module, newControllers);
+        Reflect.defineMetadata("providers", newProviders, module);
+        Reflect.defineMetadata("controllers", newControllers, module);
+        Reflect.defineMetadata("exports", newExports, module);
+        this.registerProvidersFromModule(module, this.module);
+      } else {
+        this.registerProvidersFromModule(importedModule, this.module);
+      }
     }
     // 获取当前模块提供者的元数据
     const providers = Reflect.getMetadata("providers", this.module) ?? [];
@@ -271,6 +295,7 @@ export class NestApplication {
       );
   }
   async listen(port) {
+    await this.initProviders(); // 注入providers
     await this.init();
     this.app.listen(port, () => {
       Logger.log(

@@ -27,9 +27,12 @@ export function defineModule(nestModule, target = []) {
   });
 }
 
+export function Global() {
+  return (target: Function) => {
+    Reflect.defineMetadata("global", true, target);
+  };
+}
 
-export function Global(){
-  return (target:Function) => {
-    Reflect.defineMetadata('global',true,target)
-  }
+export interface DynamicModule extends ModuleMetaData {
+  module: Function;
 }
