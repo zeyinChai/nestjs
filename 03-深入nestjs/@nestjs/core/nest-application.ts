@@ -6,7 +6,12 @@ import express, {
   NextFunction,
 } from "express";
 import path from "path";
-import { defineModule, DESIGN_PARAMTYPES, INJECTED_TOKENS } from "../common";
+import {
+  defineModule,
+  DESIGN_PARAMTYPES,
+  INJECTED_TOKENS,
+  RequestMethod,
+} from "../common";
 
 export class NestApplication {
   // 在内部私有化一个express实例
@@ -14,13 +19,58 @@ export class NestApplication {
   private readonly providerInstances = new Map();
   private readonly globalProviders = new Set();
   private readonly moduleProviders = new Map();
+  private readonly middleware = [];
   constructor(protected readonly module) {
     this.app.use(express.json()); // 用来把json格式的请求放到req.body
     this.app.use(express.urlencoded({ extends: true })); // 把form表单请求体对象放到req.body
+    this.initMiddlewares();
     this.app.use((req, res, next) => {
       req.user = { name: "admin", role: "admin" };
       next();
     });
+  }
+  private initMiddlewares() {
+    this.module.prototype.configure?.(this);
+  }
+  apply(...middleware) {
+    this.middleware.push(...middleware);
+    return this;
+  }
+  forRoutes(...routes) {
+    for (const route of routes) {
+      for (const middleware of this.middleware) {
+        const { routePath, routeMethod } = this.normalizeRouteInfo(route);
+        this.app.use(routePath, (req, res, next) => {
+          if (routeMethod === req.method) {
+            const middlewareInstance = this.getMiddlewareInstance(middleware);
+            middlewareInstance.use(req, res, next);
+          } else {
+            next();
+          }
+        });
+      }
+    }
+  }
+  private getMiddlewareInstance(middleware) {
+    if (middleware instanceof Function) {
+      return new middleware();
+    }
+    return middleware;
+  }
+  private normalizeRouteInfo(route) {
+    let routePath = "";
+    let routeMethod = RequestMethod.GET;
+    if (typeof route === "string") {
+      routePath = route;
+    } else if ("path" in route) {
+      routePath = route.path;
+      routeMethod = route.method ?? RequestMethod.GET;
+    }
+    routePath = path.posix.join("/", route);
+    return {
+      routePath,
+      routeMethod,
+    };
   }
   async initProviders() {
     // 拿到appModule身上的imports

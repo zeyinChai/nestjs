@@ -5,3 +5,7 @@ export * from "./param.decorator";
 export * from './injectable.decorator'
 export * from './inject.decorator'
 export * from './constant'
+export * from './middware.interface'
+export * from './request.method.enum'
+export * from './nest-module.interface'
+export * from './middleware-consumer.interface'
