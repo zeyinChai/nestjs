@@ -23,16 +23,16 @@ export class NestApplication {
   constructor(protected readonly module) {
     this.app.use(express.json()); // 用来把json格式的请求放到req.body
     this.app.use(express.urlencoded({ extends: true })); // 把form表单请求体对象放到req.body
-    this.initMiddlewares();
     this.app.use((req, res, next) => {
       req.user = { name: "admin", role: "admin" };
       next();
     });
   }
-  private initMiddlewares() {
+  initMiddlewares() {
     this.module.prototype.configure?.(this);
   }
   apply(...middleware) {
+    defineModule(this.module, middleware);
     this.middleware.push(...middleware);
     return this;
   }
@@ -53,7 +53,8 @@ export class NestApplication {
   }
   private getMiddlewareInstance(middleware) {
     if (middleware instanceof Function) {
-      return new middleware();
+      const dependencies = this.resolveDependencies(middleware);
+      return new middleware(...dependencies);
     }
     return middleware;
   }
@@ -346,6 +347,7 @@ export class NestApplication {
   }
   async listen(port) {
     await this.initProviders(); // 注入providers
+    await this.initMiddlewares(); // 初始化中间件
     await this.init();
     this.app.listen(port, () => {
       Logger.log(
