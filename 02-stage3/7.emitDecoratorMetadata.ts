@@ -14,13 +14,16 @@ function classDecorator(target) {}
 function paramDecorator(target, propertyKey, parametorIndex) {}
 function propDecorator(target, propertyKey) {}
 function methodDecorator(target, propertyKey, descriptor) {}
+
+class ServiceA{}
+class ServiceB{}
 @classDecorator
 class ExampleClass {
   @propDecorator
   myProperty: string;
   constructor(
-    @paramDecorator serviceA: string,
-    @paramDecorator setviceB: string
+    @paramDecorator serviceA: ServiceA,
+    @paramDecorator setviceB: ServiceB,
   ) {}
   @methodDecorator
   myMethod(): string {
@@ -32,7 +35,7 @@ class ExampleClass {
 const propertyType = Reflect.getMetadata(
   "design:type",
   ExampleClass.prototype,
-  "myProperty"
+  "myProperty",
 );
 console.log("propertyType", propertyType); // [Function: String]
 
